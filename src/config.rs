@@ -108,3 +108,22 @@ pub fn get_merged_config() -> (
 
     return (config, locs);
 }
+
+pub fn get_config_value(mut key: String) -> String {
+    key += ".";
+    let config = get_merged_config().0;
+
+    let config_vec: Vec<&str> = key.split(".").collect();
+
+    let section = config
+        .get(config_vec[0])
+        .unwrap_or(&HashMap::new())
+        .to_owned();
+    let value = section
+        .get(config_vec[1])
+        .unwrap_or(&Some(String::from("")))
+        .to_owned()
+        .unwrap_or(String::from(""));
+
+    return value;
+}
