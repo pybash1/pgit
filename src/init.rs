@@ -1,3 +1,4 @@
+use crate::config::get_config_value;
 use crate::utils::get_git_dir_path;
 use std::path::PathBuf;
 use std::{env, fs};
@@ -59,9 +60,13 @@ pub fn init_repo(
         fs::create_dir_all(hooks_git_dir).unwrap();
         fs::create_dir_all(info_git_dir).unwrap();
 
+        let def_branch = get_config_value(String::from("init.defaultbranch"));
+
         fs::write(
             head_git_file,
-            String::from("ref: refs/heads/") + branch_name.unwrap_or("master") + "\n",
+            String::from("ref: refs/heads/")
+                + branch_name.unwrap_or(def_branch.unwrap_or(String::from("master")).as_str())
+                + "\n",
         )
         .unwrap();
         fs::write(config_git_file, "").unwrap();
