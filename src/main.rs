@@ -2,10 +2,9 @@ mod config;
 mod init;
 mod utils;
 
-use std::path::Path;
-
-use crate::init::init_repo;
 use clap::{Arg, ArgAction, Command};
+use init::init_repo;
+use std::{env, path::Path};
 
 fn main() {
     let init = Command::new("init")
@@ -47,7 +46,20 @@ fn main() {
                     Some(args.get_one::<bool>("quiet").unwrap().to_owned()),
                     Some(args.get_one::<bool>("bare").unwrap().to_owned()),
                     if args.get_one::<String>("gitdir").is_some() {
-                        Some(Path::new(args.get_one::<String>("gitdir").unwrap()).to_path_buf())
+                        if !args.get_one::<String>("gitdir").unwrap().starts_with('/')
+                            && !args
+                                .get_one::<String>("gitdir")
+                                .unwrap()
+                                .split_at(1)
+                                .1
+                                .starts_with(':')
+                        {
+                            Some(env::current_dir().unwrap().join(
+                                Path::new(args.get_one::<String>("gitdir").unwrap()).to_path_buf(),
+                            ))
+                        } else {
+                            Some(Path::new(args.get_one::<String>("gitdir").unwrap()).to_path_buf())
+                        }
                     } else {
                         None
                     },

@@ -1,5 +1,5 @@
 use crate::utils::get_git_dir_path;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::{env, fs};
 
 fn already_init() -> bool {
@@ -18,19 +18,18 @@ pub fn init_repo(
     separate_git_dir: Option<PathBuf>,
     branch_name: Option<&str>,
 ) {
-    // println!(
-    //     "{:#?}",
-    //     if separate_git_dir.is_some() {
-    //         separate_git_dir.unwrap()
-    //     } else {
-    //         Path::new("").to_path_buf()
-    //     }
-    // );
-
-    let base_git_dir = if !bare.unwrap() {
-        get_git_dir_path()
+    let base_git_dir = if separate_git_dir.is_some() {
+        if !bare.unwrap() {
+            separate_git_dir.unwrap().join(".git")
+        } else {
+            separate_git_dir.unwrap()
+        }
     } else {
-        env::current_dir().unwrap()
+        if !bare.unwrap() {
+            get_git_dir_path()
+        } else {
+            env::current_dir().unwrap()
+        }
     };
     let objects_git_dir = base_git_dir.join("objects");
     let objects_info_git_dir = objects_git_dir.join("info");
@@ -62,7 +61,7 @@ pub fn init_repo(
 
         fs::write(
             head_git_file,
-            String::from("ref: refs/head/") + branch_name.unwrap_or("master") + "\n",
+            String::from("ref: refs/heads/") + branch_name.unwrap_or("master") + "\n",
         )
         .unwrap();
         fs::write(config_git_file, "").unwrap();
@@ -72,7 +71,7 @@ pub fn init_repo(
         )
         .unwrap();
 
-        if let Some(_) = quiet {
+        if !quiet.unwrap() {
             println!(
                 "Initialized empty Git repository in {}.",
                 get_git_dir_path().into_os_string().to_string_lossy()
