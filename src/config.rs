@@ -93,23 +93,10 @@ pub fn get_merged_config() -> (
         }
     }
 
-    // for debugging purposes
-    // for (k, v) in &config {
-    //     for (k_i, v_i) in v {
-    //         println!(
-    //             "{:?} {}.{}={}",
-    //             locs[&k.clone().add(".").add(k_i)],
-    //             k,
-    //             k_i,
-    //             v_i.clone().unwrap()
-    //         );
-    //     }
-    // }
-
     return (config, locs);
 }
 
-pub fn get_config_value(mut key: String) -> String {
+pub fn get_config_value(mut key: String) -> Option<String> {
     key += ".";
     let config = get_merged_config().0;
 
@@ -125,5 +112,9 @@ pub fn get_config_value(mut key: String) -> String {
         .to_owned()
         .unwrap_or(String::from(""));
 
-    return value;
+    if value.is_empty() {
+        return None;
+    }
+
+    return Some(value);
 }
