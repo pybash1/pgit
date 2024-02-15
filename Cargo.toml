@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.0", features = ["derive", "cargo"] }
 colored = "2"
+flate2 = "1.0.28"
 home = "0.5.9"
 ini = "1.3.0"
