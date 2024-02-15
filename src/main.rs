@@ -1,7 +1,9 @@
+mod cat_file;
 mod config;
 mod init;
 mod utils;
 
+use cat_file::get_file_contents;
 use clap::{builder::EnumValueParser, Arg, ArgAction, Command};
 use init::init_repo;
 use std::{env, path::Path};
@@ -36,12 +38,22 @@ fn main() {
                 .value_parser(EnumValueParser::<HashAlgo>::new())
                 .value_name("hash"),
         ]);
+    let cat_file = Command::new("cat-file")
+        .about("Get file contents from object hash")
+        .args([
+            Arg::new("hash").required(true),
+            Arg::new("pretty")
+                .short('p')
+                .help("Pretty print the contents of the blob")
+                .action(ArgAction::SetTrue),
+        ]);
 
     let cli = Command::new("pgit")
         .version(clap::crate_version!())
         .author(clap::crate_authors!())
         .about("An alternative Git CLI which is actually understandable.")
         .subcommand(init)
+        .subcommand(cat_file)
         .arg_required_else_help(true);
 
     match cli.try_get_matches() {
@@ -80,6 +92,16 @@ fn main() {
                         None
                     },
                 );
+            }
+            Some("cat-file") => {
+                let args = matches.subcommand().unwrap().1.to_owned();
+
+                if args.get_one::<bool>("pretty").unwrap().to_owned() {
+                    println!(
+                        "{}",
+                        get_file_contents(args.get_one::<String>("hash").unwrap().to_owned())
+                    );
+                }
             }
             _ => unreachable!("All exception cases are handled by clap"),
         },
