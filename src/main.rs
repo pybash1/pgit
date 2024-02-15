@@ -5,6 +5,7 @@ mod utils;
 
 use cat_file::get_file_contents;
 use clap::{builder::EnumValueParser, Arg, ArgAction, Command};
+use colored::Colorize;
 use init::init_repo;
 use std::{env, path::Path};
 use utils::HashAlgo;
@@ -46,6 +47,11 @@ fn main() {
                 .short('p')
                 .help("Pretty print the contents of the blob")
                 .action(ArgAction::SetTrue),
+            Arg::new("exit")
+                .short('e')
+                .help("Check file validity")
+                .action(ArgAction::SetTrue)
+                .conflicts_with("pretty"),
         ]);
 
     let cli = Command::new("pgit")
@@ -96,11 +102,21 @@ fn main() {
             Some("cat-file") => {
                 let args = matches.subcommand().unwrap().1.to_owned();
 
+                let output = get_file_contents(args.get_one::<String>("hash").unwrap().to_owned());
+
                 if args.get_one::<bool>("pretty").unwrap().to_owned() {
-                    println!(
-                        "{}",
-                        get_file_contents(args.get_one::<String>("hash").unwrap().to_owned())
-                    );
+                    println!("{}", output);
+                }
+
+                if args.get_one::<bool>("exit").unwrap().to_owned() {
+                    if output
+                        == String::from(format!(
+                            "{}",
+                            "pgit: invalid hash. are you sure the hash points to a blob?".red()
+                        ))
+                    {
+                        println!("{}", output);
+                    }
                 }
             }
             _ => unreachable!("All exception cases are handled by clap"),

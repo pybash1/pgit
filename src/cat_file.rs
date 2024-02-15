@@ -11,19 +11,29 @@ pub fn get_file_contents(blob_hash: String) -> String {
         .join(&blob_hash[..2])
         .join(&blob_hash[2..]);
 
-    let blob = File::open(blob_path).unwrap();
+    let blob_res = File::open(blob_path);
 
-    let mut blob_decoder = ZlibDecoder::new(blob);
-    let mut meta_and_contents = String::new();
-    let _ = blob_decoder.read_to_string(&mut meta_and_contents);
+    match blob_res {
+        Ok(blob) => {
+            let mut blob_decoder = ZlibDecoder::new(blob);
+            let mut meta_and_contents = String::new();
+            let _ = blob_decoder.read_to_string(&mut meta_and_contents);
 
-    let (_, contents) = meta_and_contents
-        .split_once("\x00")
-        .ok_or(format!(
-            "{}",
-            "pgit: invalid hash. are you sure the hash points to a blob?".red()
-        ))
-        .unwrap();
+            let (_, contents) = meta_and_contents
+                .split_once("\x00")
+                .ok_or(format!(
+                    "{}",
+                    "pgit: invalid hash. are you sure the hash points to a blob?".red()
+                ))
+                .unwrap();
 
-    return contents.to_string();
+            return contents.to_string();
+        }
+        Err(_) => {
+            return String::from(format!(
+                "{}",
+                "pgit: invalid hash. are you sure the hash points to a blob?".red()
+            ));
+        }
+    }
 }
