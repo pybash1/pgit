@@ -5,6 +5,8 @@ use std::{
     process::exit,
 };
 
+use clap::ValueEnum;
+
 pub fn get_git_dir_path() -> PathBuf {
     let cwd = env::current_dir();
     const GIT_DIR: &str = ".git";
@@ -33,7 +35,7 @@ pub fn merge_hashmaps(
             for (key_i, val_i) in val {
                 inner_final_hash.insert(key_i, val_i);
             }
-            
+
             for (key_i, val_i) in &final_hash[&key] {
                 inner_final_hash.insert(key_i.to_string(), val_i.clone());
             }
@@ -64,3 +66,12 @@ pub fn merge_hashmaps(
 
     return final_hash;
 }
+
+#[derive(Debug, Clone, ValueEnum, PartialEq)]
+pub enum HashAlgo {
+    Sha1,
+    Sha256,
+}
+
+unsafe impl Send for HashAlgo {}
+unsafe impl Sync for HashAlgo {}

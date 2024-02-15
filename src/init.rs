@@ -1,5 +1,6 @@
 use crate::config::get_config_value;
 use crate::utils::get_git_dir_path;
+use crate::utils::HashAlgo;
 use std::path::PathBuf;
 use std::{env, fs};
 
@@ -18,6 +19,7 @@ pub fn init_repo(
     bare: Option<bool>,
     separate_git_dir: Option<PathBuf>,
     branch_name: Option<&str>,
+    hashing_algo: Option<HashAlgo>
 ) {
     let base_git_dir = if separate_git_dir.is_some() {
         if !bare.unwrap() {
@@ -69,7 +71,14 @@ pub fn init_repo(
                 + "\n",
         )
         .unwrap();
-        fs::write(config_git_file, "").unwrap();
+
+        let mut config = String::from("");
+
+        if hashing_algo.is_some() && hashing_algo.unwrap() == HashAlgo::Sha256 {
+            config += "[extensions]\n\tobjectformat = sha256";
+        }
+
+        fs::write(config_git_file, config).unwrap();
         fs::write(
             description_git_file,
             "Unnamed repository; edit this file 'description' to name the repository.",

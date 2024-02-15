@@ -2,9 +2,10 @@ mod config;
 mod init;
 mod utils;
 
-use clap::{Arg, ArgAction, Command};
+use clap::{builder::EnumValueParser, Arg, ArgAction, Command};
 use init::init_repo;
 use std::{env, path::Path};
+use utils::HashAlgo;
 
 fn main() {
     let init = Command::new("init")
@@ -29,6 +30,11 @@ fn main() {
                 .long("separate-git-dir")
                 .action(ArgAction::Set)
                 .help("Create repository in separate directory from working tree"),
+            Arg::new("hashalgo")
+                .long("object-format")
+                .action(ArgAction::Set)
+                .value_parser(EnumValueParser::<HashAlgo>::new())
+                .value_name("hash"),
         ]);
 
     let cli = Command::new("pgit")
@@ -65,6 +71,11 @@ fn main() {
                     },
                     if args.get_one::<String>("branch").is_some() {
                         Some(args.get_one::<String>("branch").unwrap())
+                    } else {
+                        None
+                    },
+                    if args.get_one::<HashAlgo>("hashalgo").is_some() {
+                        Some(args.get_one::<HashAlgo>("hashalgo").unwrap().to_owned())
                     } else {
                         None
                     },
