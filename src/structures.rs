@@ -249,9 +249,14 @@ impl Object {
                 zone: committer_zone.to_owned(),
             };
 
-            (Some(author), Some(committer))
+            (
+                Some(tree.to_owned()),
+                Some(parent.to_owned()),
+                Some(author),
+                Some(committer),
+            )
         } else {
-            (None, None)
+            (None, None, None, None)
         };
 
         Self {
@@ -260,10 +265,10 @@ impl Object {
             size: header.next().unwrap().to_owned().parse().unwrap(),
             meta: Some(Meta {
                 objects: tree_meta,
-                tree: None,
-                parent: None,
-                author: commit_meta.0,
-                committer: commit_meta.1,
+                tree: commit_meta.0,
+                parent: commit_meta.1,
+                author: commit_meta.2,
+                committer: commit_meta.3,
                 mode: None,
                 filename: None,
             }),
