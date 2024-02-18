@@ -12,7 +12,8 @@ pub fn get_file_contents(object_hash: String, return_type: GetFileContentsReturn
     let object = Object::new(object_hash);
 
     if return_type == GetFileContentsReturnType::Contents {
-        object.get_contents()
+        object.print_contents();
+        String::new()
     } else if return_type == GetFileContentsReturnType::Size {
         object.size.to_string()
     } else if return_type == GetFileContentsReturnType::Type {
