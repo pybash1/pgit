@@ -75,3 +75,11 @@ pub enum HashAlgo {
 
 unsafe impl Send for HashAlgo {}
 unsafe impl Sync for HashAlgo {}
+
+pub fn pad_mode_with_zero(text: String) -> String {
+    if text.len() < 6 {
+        return String::from("0") + text.as_str();
+    }
+
+    text
+}
