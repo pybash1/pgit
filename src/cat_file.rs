@@ -1,39 +1,23 @@
-use std::{fs::File, io::Read};
+use crate::structures::Object;
 
-use colored::Colorize;
-use flate2::read::ZlibDecoder;
+#[derive(PartialEq)]
+pub enum GetFileContentsReturnType {
+    NoReturn,
+    Size,
+    Contents,
+    Type,
+}
 
-use crate::utils::get_git_dir_path;
+pub fn get_file_contents(object_hash: String, return_type: GetFileContentsReturnType) -> String {
+    let object = Object::new(object_hash);
 
-pub fn get_file_contents(blob_hash: String) -> String {
-    let blob_path = get_git_dir_path()
-        .join("objects")
-        .join(&blob_hash[..2])
-        .join(&blob_hash[2..]);
-
-    let blob_res = File::open(blob_path);
-
-    match blob_res {
-        Ok(blob) => {
-            let mut blob_decoder = ZlibDecoder::new(blob);
-            let mut meta_and_contents = String::new();
-            let _ = blob_decoder.read_to_string(&mut meta_and_contents);
-
-            let (_, contents) = meta_and_contents
-                .split_once("\x00")
-                .ok_or(format!(
-                    "{}",
-                    "pgit: invalid hash. are you sure the hash points to a blob?".red()
-                ))
-                .unwrap();
-
-            return contents.to_string();
-        }
-        Err(_) => {
-            return String::from(format!(
-                "{}",
-                "pgit: invalid hash. are you sure the hash points to a blob?".red()
-            ));
-        }
+    if return_type == GetFileContentsReturnType::Contents {
+        object.get_contents()
+    } else if return_type == GetFileContentsReturnType::Size {
+        object.size.to_string()
+    } else if return_type == GetFileContentsReturnType::Type {
+        object.obj_type.to_string()
+    } else {
+        String::new()
     }
 }

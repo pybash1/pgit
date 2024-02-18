@@ -1,11 +1,13 @@
 mod cat_file;
 mod config;
+mod debug;
 mod init;
 mod utils;
+mod structures;
 
-use cat_file::get_file_contents;
+use cat_file::{get_file_contents, GetFileContentsReturnType};
 use clap::{builder::EnumValueParser, Arg, ArgAction, Command};
-use colored::Colorize;
+use debug::debug;
 use init::init_repo;
 use std::{env, path::Path};
 use utils::HashAlgo;
@@ -46,12 +48,31 @@ fn main() {
             Arg::new("pretty")
                 .short('p')
                 .help("Pretty print the contents of the blob")
+                .conflicts_with("size")
+                .conflicts_with("exit")
+                .conflicts_with("type")
                 .action(ArgAction::SetTrue),
+            Arg::new("size")
+                .short('s')
+                .help("Get object size")
+                .action(ArgAction::SetTrue)
+                .conflicts_with("pretty")
+                .conflicts_with("exit")
+                .conflicts_with("type"),
+            Arg::new("type")
+                .short('t')
+                .help("Get object type")
+                .action(ArgAction::SetTrue)
+                .conflicts_with("pretty")
+                .conflicts_with("size")
+                .conflicts_with("exit"),
             Arg::new("exit")
                 .short('e')
                 .help("Check file validity")
                 .action(ArgAction::SetTrue)
-                .conflicts_with("pretty"),
+                .conflicts_with("pretty")
+                .conflicts_with("size")
+                .conflicts_with("type"),
         ]);
 
     let cli = Command::new("pgit")
@@ -60,10 +81,14 @@ fn main() {
         .about("An alternative Git CLI which is actually understandable.")
         .subcommand(init)
         .subcommand(cat_file)
+        .subcommand(Command::new("dbg").arg(Arg::new("arg").required(true)))
         .arg_required_else_help(true);
 
     match cli.try_get_matches() {
         Ok(matches) => match matches.subcommand_name() {
+            Some("dbg") => {
+                debug(matches.subcommand().unwrap().1.to_owned());
+            }
             Some("init") => {
                 let args = matches.subcommand().unwrap().1.to_owned();
                 init_repo(
@@ -102,22 +127,22 @@ fn main() {
             Some("cat-file") => {
                 let args = matches.subcommand().unwrap().1.to_owned();
 
-                let output = get_file_contents(args.get_one::<String>("hash").unwrap().to_owned());
+                let return_type = if args.get_one::<bool>("pretty").unwrap().to_owned() {
+                    GetFileContentsReturnType::Contents
+                } else if args.get_one::<bool>("size").unwrap().to_owned() {
+                    GetFileContentsReturnType::Size
+                } else if args.get_one::<bool>("type").unwrap().to_owned() {
+                    GetFileContentsReturnType::Type
+                } else {
+                    GetFileContentsReturnType::NoReturn
+                };
 
-                if args.get_one::<bool>("pretty").unwrap().to_owned() {
-                    println!("{}", output);
-                }
+                let output = get_file_contents(
+                    args.get_one::<String>("hash").unwrap().to_owned(),
+                    return_type,
+                );
 
-                if args.get_one::<bool>("exit").unwrap().to_owned() {
-                    if output
-                        == String::from(format!(
-                            "{}",
-                            "pgit: invalid hash. are you sure the hash points to a blob?".red()
-                        ))
-                    {
-                        println!("{}", output);
-                    }
-                }
+                println!("{}", output);
             }
             _ => unreachable!("All exception cases are handled by clap"),
         },
